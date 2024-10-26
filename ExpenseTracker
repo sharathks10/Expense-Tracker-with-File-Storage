@@ -1,0 +1,105 @@
+import json
+
+# Expense class to store individual expenses
+class Expense:
+    def __init__(self, date, category, amount, description):
+        self.date = date
+        self.category = category
+        self.amount = amount
+        self.description = description
+
+    def to_dict(self):
+        return {
+            "date": self.date,
+            "category": self.category,
+            "amount": self.amount,
+            "description": self.description
+        }
+
+# ExpenseTracker class to manage expenses
+class ExpenseTracker:
+    def __init__(self, filename='expenses.json'):
+        self.filename = filename
+        self.expenses = self.load_expenses()
+
+    def load_expenses(self):
+        try:
+            with open(self.filename, 'r') as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return []
+
+    def save_expenses(self):
+        with open(self.filename, 'w') as file:
+            json.dump(self.expenses, file, indent=4)
+
+    def add_expense(self, expense):
+        self.expenses.append(expense.to_dict())
+        self.save_expenses()
+        print(f"Added expense: {expense.description} - ${expense.amount}")
+
+    def view_expenses(self):
+        print("All Expenses:")
+        for expense in self.expenses:
+            print(f"{expense['date']} | {expense['category']} | ${expense['amount']} | {expense['description']}")
+    
+    def filter_by_category(self, category):
+        filtered_expenses = [e for e in self.expenses if e["category"].lower() == category.lower()]
+        print(f"Expenses in Category '{category}':")
+        for expense in filtered_expenses:
+            print(f"{expense['date']} | ${expense['amount']} | {expense['description']}")
+
+    def calculate_total(self):
+        total = sum(expense["amount"] for expense in self.expenses)
+        print(f"Total Expenses: ${total}")
+
+        category_totals = {}
+        for expense in self.expenses:
+            category = expense["category"]
+            category_totals[category] = category_totals.get(category, 0) + expense["amount"]
+        
+        print("Total by Category:")
+        for category, amount in category_totals.items():
+            print(f"{category}: ${amount}")
+
+# Main function to test the Expense Tracker
+def main():
+    tracker = ExpenseTracker()
+
+    while True:
+        print("\nExpense Tracker Menu:")
+        print("1. Add Expense")
+        print("2. View All Expenses")
+        print("3. Filter by Category")
+        print("4. Calculate Total")
+        print("5. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            date = input("Enter date (YYYY-MM-DD): ")
+            category = input("Enter category (e.g., Food, Travel, Bills): ")
+            amount = float(input("Enter amount: "))
+            description = input("Enter description: ")
+            expense = Expense(date, category, amount, description)
+            tracker.add_expense(expense)
+
+        elif choice == '2':
+            tracker.view_expenses()
+
+        elif choice == '3':
+            category = input("Enter category to filter by: ")
+            tracker.filter_by_category(category)
+
+        elif choice == '4':
+            tracker.calculate_total()
+
+        elif choice == '5':
+            print("Exiting Expense Tracker. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
